@@ -8,7 +8,7 @@ import { ERC20Detailed } from "@openzeppelin/contracts/token/ERC20/ERC20Detailed
 
 contract ERC20MintOwn is ERC20, ERC20Detailed, Ownable {
     
-    constructor(string memory name, string memory symbol) ERC20() ERC20Detailed(name, symbol, 18) public {}
+    constructor(string memory name, string memory symbol) ERC20Detailed(name, symbol, 18) public {}
     
     function mint(address account, uint256 amount) public onlyOwner {
         _mint(account, amount);
