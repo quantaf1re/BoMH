@@ -4,12 +4,15 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
+/**
+ * @notice  Auction is a simple auction, that auctions off one
+ *          token in exchange for another and sends the winning
+ *          bid to the beneficiary. Adapted from SimpleAuction
+ *          to use tokens instead of Ether.
+ */
 contract Auction {
     using SafeMath for uint256;
 
-    // Parameters of the auction. Times are either
-    // absolute unix timestamps (seconds since 1970-01-01)
-    // or time periods in seconds.
     address public beneficiary;
     uint public auctionEndTime;
     IERC20 public prizeToken;
@@ -26,14 +29,19 @@ contract Auction {
     event HighestBidIncreased(address bidder, uint amount);
     event AuctionEnded(address winner, uint amount);
 
-    // The following is a so-called natspec comment,
-    // recognizable by the three slashes.
-    // It will be shown when the user is asked to
-    // confirm a transaction.
-
-    /// Create a simple auction with `_biddingTime`
-    /// seconds bidding time on behalf of the
-    /// beneficiary address `_beneficiary`.
+    /**
+     * @dev Initialise contract
+     * @param _biddingTime      time in seconds before the auction
+     *                          can be ended
+     * @param _beneficiary      address to send `highestBid` amount of
+     *                          `bidToken` to
+     * @param _prizeToken       address of the token which is being auctioned.
+     *                          Note: tokens must be sent to the contract separately
+     *                          because you can't use transferFrom in the constructor
+     *                          since you can't approve a contract address that
+     *                          hasn't been created yet
+     * @param _bidToken         address of the token which is being bidded with
+     */
     constructor(
         uint _biddingTime,
         address _beneficiary,
@@ -46,12 +54,15 @@ contract Auction {
         bidToken = _bidToken;
         // Need to do this so that, if someone sends
         // bidTokens to the auction before the first
-        // bid, the tokens can be transferred
+        // bid, the excess tokens can be transferred
         highestBidder = _beneficiary;
     }
 
-    /// Bid on the auction with the tokens sent
-    /// together with this transaction
+    /**
+      * @dev Bid on the auction.
+      * @param _amount  Amount of `bidToken` to bid with. Need to
+      *                 approve that amount beforehand
+      */
     function bid(uint256 _amount) public {
         // Revert if the bidding period is over.
         require(
@@ -83,9 +94,10 @@ contract Auction {
         emit HighestBidIncreased(msg.sender, _amount);
     }
 
-
-    /// End the auction and send the highest bid
-    /// to the beneficiary.
+    /**
+      * @dev    End the auction and send the highest bid
+      *         to the beneficiary.
+      */
     function endAuction() public {
         require(block.timestamp >= auctionEndTime, "Auction not yet ended");
         require(!ended, "AuctionEnd already been called");
