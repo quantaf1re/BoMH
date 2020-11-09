@@ -1,5 +1,7 @@
 # BoMH
-Bank of Moral Hazard is a bank that issues a USD-pegged stablecoin in return for USD-pegged stablecoins collateral. It lends out a defined fraction of its reserve collateral to lending platforms (via mStable) and auctions off the profits in return for `mhCoin`. It burns `mhCoin`s it receives from the auction, which reduces the supply of `mhCoin`, drives up the price of `mhCoin`, and therefore translates profits to holders fo the token, similar to a stock buyback.
+Bank of Moral Hazard is a bank that issues a USD-pegged stablecoin in return for USD-pegged stablecoins collateral. It lends out a defined fraction of its reserve collateral to lending platforms (via mStable) and auctions off the profits in return for `mhCoin`. It burns `mhCoin`s it receives from the auction, which reduces the supply of `mhCoin`, drives up the price of `mhCoin`, and therefore translates profits to holders fo the token, similar to a stock buyback. What could possibly go wrong?!? Such a bank has absolutely never had any black swans occur ever.
+
+Jokes aside, this actually isn't a bad idea since, with regular banks, their collateral is very illiquid (real estate), whereas the collateral used in BoMH is liquid and can be withdrawn any time (until a black swan comes along...)
 
 Tests can be run with `yarn test`.
 
