@@ -3,9 +3,10 @@ import { fullScale, ZERO, ONE_DAY, ZERO_ADDRESS, DEAD_ADDRESS } from "@utils/con
 
 import { BN } from "@utils/tools";
 import * as t from "types/generated";
-import { createSnapshot, revertToSnapshot } from "../helpers/blockchain";
 import { MassetMachine, StandardAccounts, SystemMachine, MassetDetails } from "@utils/machines";
 import { expect } from "chai";
+import { createSnapshot, revertToSnapshot } from "../helpers/blockchain";
+import { validBid, revBidAucEnd, revBidNotHigher } from "../bomh/shared/bomhShared";
 
 
 const Auction = artifacts.require("Auction");
@@ -18,15 +19,19 @@ const MockERC20 = artifacts.require("MockERC20");
 // within each describe block to revert back to after the
 // actions in the `before` block of that describe block.
 // Thus, the actions in `before` aren't reverted, but the
-// `it` tests are, relative to their `before` block
+// `it` tests are, relative to their `before` block.
+// Since there's only 2 functions in this contract, it's
+// not really feasible to have separate ut/it
 contract("Auction", async (accounts) => {
-
+    
+    // mStable
     const sa = new StandardAccounts(accounts);
     let systemMachine: SystemMachine;
     let massetMachine: MassetMachine;
     let massetDetails: MassetDetails;
     let mUSD: t.MassetInstance;
 
+    // Auction
     let token: t.MockErc20Instance;
     let auction: t.AuctionInstance;
     let snapshot: any;
@@ -39,6 +44,7 @@ contract("Auction", async (accounts) => {
     const BID2_AMOUNT = BID1_AMOUNT.mul(new BN(2));
 
     before(async () => {
+        // Set up the mStable system
         systemMachine = new SystemMachine(sa.all);
         await systemMachine.initialiseMocks(false, true);
         massetMachine = systemMachine.massetMachine;
@@ -67,6 +73,14 @@ contract("Auction", async (accounts) => {
 
     });
 
+    beforeEach("creating snapshot", async () => {
+        snapshot = await createSnapshot();
+    });
+
+    afterEach("reverting to snapshot", async () => {
+        await revertToSnapshot(snapshot);
+    });
+
     it("Verifying default storage", async () => {
         expect(await auction.beneficiary()).eq(beneficiary);
         expect(await auction.auctionEndTime()).bignumber.eq(auctionInitTime.add(ONE_DAY));
@@ -80,45 +94,13 @@ contract("Auction", async (accounts) => {
     // Covers the edge case where no bids have been made but someone
     // sent tokens to the auction contract without calling `bid`
     it("Send excess tokens before 1st bid to beneficiary", async () => {
-        // No point creating another `describe` block just for
-        // this 1 test which has to be done before any bids
-        snapshot = await createSnapshot();
-
         await token.transfer(auction.address, BID1_AMOUNT, { from: sa.dummy2 });
         await auction.bid(BID1_AMOUNT, { from: sa.dummy1 });
 
         expect(await token.balanceOf(auction.address)).bignumber.eq(BID1_AMOUNT);
         expect(await token.balanceOf(beneficiary)).bignumber.eq(BID1_AMOUNT);
         expect(await token.balanceOf(sa.dummy2)).bignumber.eq(INIT_TOKEN_BALS.sub(BID1_AMOUNT));
-
-        await revertToSnapshot(snapshot);
     });
-
-
-    async function validBid(bidAmount: BN, bidder: string, bidTx: any) {
-        expect(await token.balanceOf(auction.address)).bignumber.eq(bidAmount);
-        expect(await auction.highestBidder()).eq(bidder);
-        expect(await auction.highestBid()).bignumber.eq(bidAmount);
-        await expectEvent(bidTx.receipt, "HighestBidIncreased", {
-            bidder: bidder,
-            amount: bidAmount,
-        });
-    }
-
-    async function revBidAucEnd(bidAmount: BN, bidder: string) {
-        await time.increase(ONE_DAY);
-        await expectRevert(
-            auction.bid(bidAmount.mul(new BN(2)), { from: bidder }),
-            "Auction already ended.",
-        );
-    }
-
-    async function revBidNotHigher(bidder: string) {
-        await expectRevert(
-            auction.bid(ZERO, { from: bidder }),
-            "There already is a higher bid.",
-        );
-    }
 
     describe("1st bid", async () => {
         let bid1Tx: any;
@@ -127,26 +109,16 @@ contract("Auction", async (accounts) => {
             bid1Tx = await auction.bid(BID1_AMOUNT, { from: sa.dummy1 });
         });
 
-        // It would be nice to include this in `before` rather than
-        // here but for some reason that doesn't work
-        beforeEach("creating snapshot", async () => {
-            snapshot = await createSnapshot();
-        });
-    
-        afterEach("reverting to snapshot", async () => {
-            await revertToSnapshot(snapshot);
-        });
-
         it("Valid bid", async () => {
-            await validBid(BID1_AMOUNT, sa.dummy1, bid1Tx);
+            await validBid(auction, token, BID1_AMOUNT, sa.dummy1, bid1Tx);
         });
 
         it("Revert auction ended", async () => {
-            await revBidAucEnd(BID1_AMOUNT, sa.dummy1);
+            await revBidAucEnd(auction, BID1_AMOUNT, sa.dummy1);
         });
 
         it("Revert bid not higher", async () => {
-            await revBidNotHigher(sa.dummy1);
+            await revBidNotHigher(auction, sa.dummy1);
         });
 
         // Only need to test this endAuction revert condition once,
@@ -213,24 +185,16 @@ contract("Auction", async (accounts) => {
             bid2Tx = await auction.bid(BID2_AMOUNT, { from: sa.dummy2 });
         });
 
-        beforeEach("creating snapshot", async () => {
-            snapshot = await createSnapshot();
-        });
-    
-        afterEach("reverting to snapshot", async () => {
-            await revertToSnapshot(snapshot);
-        });
-
         it("Valid bid", async () => {
-            await validBid(BID2_AMOUNT, sa.dummy2, bid2Tx);
+            await validBid(auction, token, BID2_AMOUNT, sa.dummy2, bid2Tx);
         });
 
         it("Revert auction ended", async () => {
-            await revBidAucEnd(BID2_AMOUNT, sa.dummy2);
+            await revBidAucEnd(auction, BID2_AMOUNT, sa.dummy2);
         });
 
         it("Revert bid not higher", async () => {
-            await revBidNotHigher(sa.dummy2);
+            await revBidNotHigher(auction, sa.dummy2);
         });
     })
 
@@ -274,7 +238,5 @@ contract("Auction", async (accounts) => {
                 "AuctionEnd already been called",
             );
         });
-
-
     })
 });
