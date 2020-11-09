@@ -9,6 +9,13 @@ import BN from "bn.js";
 const MockERC20 = artifacts.require("MockERC20");
 
 
+// Functions that check conditions of bomh for correct execution
+// for reuse in various tests - DRY
+
+
+// A common instance of BoMHMachine by tests aslong as those tests
+// revert the EVM to the state just after initialising it. Currently
+// this is used in all tests except the integration test
 export const bm = new BoMHMachine();
  
 

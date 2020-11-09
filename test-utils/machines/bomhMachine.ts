@@ -117,6 +117,10 @@ export class BoMHMachine {
         this.initiated = true;
     }
 
+    /**
+     * @dev Generate interest for masset hodlers by using swap to give fees to mStable
+     *      and distribute the interest after a decent amount of time (10 days)
+     */
     public async genInterest() {
         // Swap and generate fees/interest
         await this.mUSD.swap(this.tusd.address, this.usdt.address, fullScale, this.sa.default, { from: this.sa.default });
@@ -129,21 +133,40 @@ export class BoMHMachine {
         await this.mUSDSaveMan.collectAndDistributeInterest(this.mUSD.address);
     }
 
+    /**
+     * @dev Cumulative action up to generate interest in the series of:
+     *      deposit > generate interest > withdraw > cash out > bid and end auction > burn mhCoins
+     */
     public async cumulGenInterest() {
         await this.bomh.deposit(this.tusd.address, bc.DEP_AMOUNT, { from: this.sa.dummy1});
         await this.genInterest();
     }
 
+    /**
+     * @dev Cumulative action up to withdraw in the series of:
+     *      deposit > generate interest > withdraw > cash out > bid and end auction > burn mhCoins
+     * @return Transaction      the generate interest transaction so events can be analysed
+     */
     public async cumulWithdraw(): Promise<any> {
         await this.cumulGenInterest();
         return this.bomh.withdraw(bc.DEP_AMOUNT, { from: this.sa.dummy1 });
     }
 
+    /**
+     * @dev Cumulative action up to cash out in the series of:
+     *      deposit > generate interest > withdraw > cash out > bid and end auction > burn mhCoins
+     * @return Transaction      the cash out transaction so events can be analysed
+     */
     public async cumulCashOut(): Promise<any> {
         await this.cumulWithdraw();
         return this.bomh.cashOut();
     }
 
+    /**
+     * @dev Cumulative action up to bid and end auction in the series of:
+     *      deposit > generate interest > withdraw > cash out > bid and end auction > burn mhCoins
+     * @param bidAmount Amount of mhCoin to bid on the auction
+     */
     public async cumulAuctionEnded(bidAmount: BN) {
         await this.cumulCashOut();
         
@@ -156,29 +179,15 @@ export class BoMHMachine {
         await auction.endAuction();
     }
 
+    /**
+     * @dev Cumulative action up to burn mhCoins in the series of:
+     *      deposit > generate interest > withdraw > cash out > bid and end auction > burn mhCoins
+     * @param bidAmount Amount of mhCoin to bid on the auction
+     */
     public async cumulMHCoinBurn(bidAmount: BN) {
         await this.cumulAuctionEnded(bidAmount);
         await this.bomh.mhCoinBurn();
     }
-
-
-    // snapshot = await createSnapshot();
-    // await this.bomh.deposit(this.tusd.address, bc.DEP_AMOUNT, { from: this.sa.dummy1});
-    // await this.genInterest();
-    // await this.bomh.withdraw(bc.DEP_AMOUNT, { from: this.sa.dummy1 });
-    // await this.bomh.cashOut();
-    
-    // // Bid on and finish the auction
-    // const auction = await Auction.at(await this.bomh.indexToAuctionAddr(0));
-    // mUSDAuctionBal = await this.mUSD.balanceOf(auction.address);
-    // await this.mhCoin.transfer(this.sa.dummy2, bidAmount, { from: this.sa.default });
-    // await this.mhCoin.approve(auction.address, bidAmount, { from: this.sa.dummy2 });
-    // await auction.bid(bidAmount, { from: this.sa.dummy2 });
-    // await time.increase(ONE_DAY);
-    // await auction.endAuction();
-
-    // // Burn all mhUSD held by bomh (the amount bidded on the auction)
-    // await this.bomh.mhCoinBurn();
 }
 
 export default BoMHMachine;

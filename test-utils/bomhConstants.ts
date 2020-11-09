@@ -20,7 +20,6 @@ export const MAX_FRAC = new BN(10000);
 export const MHCOIN_INIT_SUP = fullScale.mul(new BN(1000));
 
 // Initial amounts for testing with
-// export const SC_INIT_AMOUNT = fullScale.mul(new BN(100));
 export const SC_INIT_AMOUNT = fullScale;
 export const BIG_NUM = (new BN(2)).pow(new BN(256)).sub(new BN(1));
 export const DEP_AMOUNT = SC_INIT_AMOUNT.div(new BN(2));
