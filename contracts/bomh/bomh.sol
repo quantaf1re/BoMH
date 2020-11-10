@@ -202,10 +202,7 @@ contract BoMH is IBoMH, MassetStructs, InitializableReentrancyGuard {
         // Redeem credits
 
         // ----- BUG SHOWCASE -----
-        // Uncomment the 2 commented lines and comment the 2 uncommented lines
-        // uint256 mUSDLentAmount = _mhUSDAmount.mul(MAX_FRACTION.sub(reserveFraction)).div(MAX_FRACTION);
-        uint256 mUSDLentAmount = _mhUSDAmount.mul(MAX_FRACTION.sub(reserveFraction)).div(MAX_FRACTION).sub(1);
-        // uint256 credits = mStableHelper.getSaveRedeemInput(mUSDSAVE, mUSDLentAmount).sub(1);
+        uint256 mUSDLentAmount = _mhUSDAmount.mul(MAX_FRACTION.sub(reserveFraction)).div(MAX_FRACTION);
         uint256 credits = mStableHelper.getSaveRedeemInput(mUSDSAVE, mUSDLentAmount);
 
         mUSDSAVE.redeem(credits);
