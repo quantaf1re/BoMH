@@ -38,15 +38,11 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
             Case 2: withdrawing after there have been some swaps
             by a 3rd party after depositing
 
-            This branch focuses on bug 1
+            This branch focuses on bug 2
 
-            Bug 1 is that getSaveRedeemInput() returns 1 more than
-            it should in both cases, meaning that it has to
-            be compensated for when using the returned value, otherwise
-            trying to redeem the amount that getSaveRedeemInput() returns
-            will throw an error saying bm.bomh doesn't own that many credits.
-            This error can be seen in the console.log() for both cases
-            below.
+            To compensate for bug 1, perhaps we should subtract 1 from the
+            value returned by getSaveRedeemInput(). This branch has done
+            that in bomh.sol
 
             ---Without any swapping before---
             getSaveRedeemInput() = 
