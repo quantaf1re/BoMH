@@ -26,29 +26,40 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
 
         before(async () => {
             console.log(`
-            -----------------NOTE-----------------
-            There are 2 bugs I've discovered with 2 cases.
-            Case 1: withdrawing straight after depositing
-            Case 2: withdrawing after there have been some swaps
-            by a 3rd party after depositing
-    
-            To compensate for bug 1, perhaps we should subtract 1 from the
-            value returned by getSaveRedeemInput(). This branch has done
-            that in bomh.sol. This allows withdraw() to execute without
-            error, but means that users receive 1wei less than they should.
-    
-            ---Without any swapping before---
-            getSaveRedeemInput() = 
-            ${await bm.mstHelp.getSaveRedeemInput(bm.mUSDSAVE.address, bc.LENT_AMOUNT)}
-            
-            If no measures are taken to compensate for this, then withdrawing
-            the same amount that was deposited, as in this test, will fail
-            with 'Saver has no credits'.
-            The credit balance of bomh:
-            ${await bm.mUSDSAVE.creditBalances(bm.bomh.address)}
-    
+                -----------------NOTE-----------------
+                There are 2 bugs I've discovered with 2 cases.
+                Case 1: withdrawing straight after depositing
+                Case 2: withdrawing after there have been some swaps
+                by a 3rd party after depositing
+        
+                To compensate for bug 1, perhaps we should subtract 1 from the
+                value returned by getSaveRedeemInput(). This branch has done
+                that in bomh.sol. This allows withdraw() to execute without
+                error, but means that users receive 1wei less than they should.
+                What's more, after swapping a few times (as in genInterest() below), 
+                the mUSD balance of bomh that's redeemed from credits is 1 less than
+                what it should be, and causes an error when _burn is called in
+                _settleRedemption() in Masset.sol
+        
+                ---Without any swapping before---
+                getSaveRedeemInput() = 
+                ${await bm.mstHelp.getSaveRedeemInput(bm.mUSDSAVE.address, bc.LENT_AMOUNT)}
+                
+                creditBalances() = 
+                ${await bm.mUSDSAVE.creditBalances(bm.bomh.address)}
             `);
-    
+
+            await bm.genInterest();
+
+            console.log(`
+                ---After swapping and distributing interest---
+                getSaveRedeemInput() = 
+                ${await bm.mstHelp.getSaveRedeemInput(bm.mUSDSAVE.address, bc.LENT_AMOUNT)}
+                
+                creditBalances() = 
+                ${await bm.mUSDSAVE.creditBalances(bm.bomh.address)}
+            `);
+
             withdrawTx = await bm.bomh.withdraw(bc.DEP_AMOUNT, { from: bm.sa.dummy1 });
         });
     
