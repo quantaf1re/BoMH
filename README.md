@@ -6,7 +6,7 @@ Jokes aside, this actually isn't a bad idea since, with regular banks, their col
 Tests can be run with `yarn test`.
 
 The tests use EVM reverts to rewind the state to a desired point, thereby eliminating the need to redeploy contract every time a "fresh slate" is desired.
-Beause of the use of reverts before and after every unit test (in the form of `beforeEach` and `afterEach` Mocha blocks), a fresh state is guaranteed to ensure tests don't interfere with eachother.
+Beause of the use of reverts before and after every unit test (in the form of `beforeEach` and `afterEach` Mocha blocks), a fresh state is guaranteed to ensure tests don't interfere with eachother. In some tests, there is just 1 Mocha `it` block with `beforeEach` and `afterEach` blocks, which seems like a long-winded way of doing the EVM reverts, but it's designed that way so that A) it keeps in the same style as the rest of the tests and B) it makes the tests more extendable in the future by minimising the work needed to expand the tests.
 
 If I had more time to spend on this, I'd have added a DAO, so that the governance token (`mhCoin`) can actually be used for governance to set things like the fraction of reserves to keep etc.
 
