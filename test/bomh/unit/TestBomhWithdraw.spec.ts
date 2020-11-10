@@ -41,9 +41,6 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
             getSaveRedeemInput() = 
             ${await bm.mstHelp.getSaveRedeemInput(bm.mUSDSAVE.address, bc.LENT_AMOUNT)}
             
-            If no measures are taken to compensate for this, then withdrawing
-            the same amount that was deposited, as in this test, will fail
-            with 'Saver has no credits'.
             The credit balance of bomh:
             ${await bm.mUSDSAVE.creditBalances(bm.bomh.address)}
     
