@@ -20,7 +20,7 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
         await bm.bomh.deposit(bm.tusd.address, bc.DEP_AMOUNT, { from: bm.sa.dummy1});
     });
 
-    describe("--------BUG 2 CASE 1 SHOWCASE - CHECK CODE--------", async () => {
+    describe("--------BUG 2 CASE 2 SHOWCASE - CHECK CODE--------", async () => {
 
         let withdrawTx: any;
 
