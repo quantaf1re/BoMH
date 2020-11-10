@@ -17,20 +17,14 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
             console.log("Initiating BoMH");
             await bm.init(accounts);
         }
-    });
-
-    beforeEach("creating snapshot", async () => {
-        snapshot = await createSnapshot();
         await bm.bomh.deposit(bm.tusd.address, bc.DEP_AMOUNT, { from: bm.sa.dummy1});
     });
 
-    afterEach("reverting to snapshot", async () => {
-        await revertToSnapshot(snapshot);
-    });
-
-    
     describe("--------BUG SHOWCASE - CHECK CODE--------", async () => {
-        it("Case 1", async () => {
+
+        let withdrawTx: any;
+
+        before(async () => {
             console.log(`
             -----------------NOTE-----------------
             There are 2 bugs I've discovered with 2 cases.
@@ -60,7 +54,11 @@ contract("Bank of Moral Hazard Withdrawals", async (accounts) => {
 
             `);
 
-            await bm.bomh.withdraw(bc.DEP_AMOUNT, { from: bm.sa.dummy1 });
+            withdrawTx = await bm.bomh.withdraw(bc.DEP_AMOUNT, { from: bm.sa.dummy1 });
+        });
+
+        it("Valid withdraw", async () => {
+            await validWithdraw(bm, withdrawTx, bc.DEP_AMOUNT, bm.sa.dummy1, true);
         });
     });
 });
